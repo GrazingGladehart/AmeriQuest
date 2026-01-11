@@ -56,6 +56,12 @@ export async function registerRoutes(
     }
   });
 
+  // Get all questions (for settings page dropdown)
+  app.get("/api/questions", async (req, res) => {
+    const questions = await storage.getAllQuestions();
+    res.json(questions);
+  });
+
   app.get(api.game.getSettings.path, async (req, res) => {
     const s = await storage.getSettings();
     res.json(s);
