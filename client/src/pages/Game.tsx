@@ -135,6 +135,7 @@ export default function Game() {
         setCheckpoints(prev => prev.map(cp => 
           cp.id === activeQuestion.id ? { ...cp, collected: true } : cp
         ));
+        // After a small delay to show success in dialog, we'll close it
         return true;
       }
       return false;
