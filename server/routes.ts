@@ -1,3 +1,4 @@
+import { getDistance } from "geolib";
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
@@ -17,20 +18,39 @@ export async function registerRoutes(
       const randomQuestions = await storage.getRandomQuestions(count);
       const customCheckpoints = await storage.getCustomCheckpoints();
       
+      const minDistanceFromCenter = 7; // meters
+      const minDistanceBetweenCheckpoints = 7; // meters
+      const generatedCoords: {lat: number, lng: number}[] = [];
+
       const checkpoints = [
         ...randomQuestions.map(q => {
-          const r = radius / 111000;
-          const u = Math.random();
-          const v = Math.random();
-          const w = r * Math.sqrt(u);
-          const t = 2 * Math.PI * v;
-          const x = w * Math.cos(t);
-          const y = w * Math.sin(t);
+          let attempts = 0;
+          let x = 0, y = 0;
+          let finalLat = lat, finalLng = lng;
+          
+          while (attempts < 50) {
+            const r = (minDistanceFromCenter + Math.random() * (radius - minDistanceFromCenter)) / 111000;
+            const t = 2 * Math.PI * Math.random();
+            x = r * Math.cos(t);
+            y = r * Math.sin(t) / Math.cos(lat * Math.PI / 180);
+            
+            finalLat = lat + x;
+            finalLng = lng + y;
+
+            const tooCloseToOthers = generatedCoords.some(c => 
+              getDistance({latitude: finalLat, longitude: finalLng}, {latitude: c.lat, longitude: c.lng}) < minDistanceBetweenCheckpoints
+            );
+
+            if (!tooCloseToOthers) break;
+            attempts++;
+          }
+          
+          generatedCoords.push({lat: finalLat, lng: finalLng});
           
           return {
             id: q.id,
-            lat: lat + x,
-            lng: lng + y / Math.cos(lat * Math.PI / 180),
+            lat: finalLat,
+            lng: finalLng,
             question: q.question,
             options: q.options,
             points: q.points,
@@ -69,8 +89,8 @@ export async function registerRoutes(
 
   app.post(api.game.updateSettings.path, async (req, res) => {
     try {
-      const { timeLimit } = api.game.updateSettings.input.parse(req.body);
-      await storage.updateSettings(timeLimit);
+      const { timeLimit, checkpointCount, radius } = req.body;
+      await storage.updateSettings(timeLimit, checkpointCount, radius);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Invalid settings" });

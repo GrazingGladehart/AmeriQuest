@@ -27,7 +27,7 @@ export default function Game() {
   const [showARView, setShowARView] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
-  const settingsQuery = useQuery<{ timeLimit: number }>({
+  const settingsQuery = useQuery<{ timeLimit: number; checkpointCount: number; radius: number }>({
     queryKey: ["/api/settings"],
   });
 
@@ -59,8 +59,10 @@ export default function Game() {
   // Start Game Handler
   const handleStartGame = () => {
     if (lat && lng) {
+      const count = settingsQuery.data?.checkpointCount ?? 5;
+      const radius = settingsQuery.data?.radius ?? 500;
       generateGameMutation.mutate(
-        { lat, lng, radius: 500, count: 5 },
+        { lat, lng, radius, count },
         {
           onSuccess: (data) => {
             setCheckpoints(data);

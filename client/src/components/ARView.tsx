@@ -2,17 +2,17 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import { motion, AnimatePresence } from "framer-motion";
 import { getRhumbLineBearing, getDistance } from "geolib";
-import { TreeDeciduous, Dog, Bird, Leaf, Target, X, Camera, CameraOff, MapPin } from "lucide-react";
+import { TreeDeciduous, Dog, Bird, Leaf, X, CameraOff, MapPin, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { Checkpoint } from "@shared/schema";
 
 // Nature avatars for close-range checkpoints
 const NATURE_AVATARS = [TreeDeciduous, Dog, Bird, Leaf];
 
 const getAvatar = (id: number) => {
   const Icon = NATURE_AVATARS[id % NATURE_AVATARS.length];
-  return <Icon className="w-8 h-8 text-white" />;
+  return <Icon className="w-10 h-10 text-white" />;
 };
-import { Button } from "@/components/ui/button";
-import type { Checkpoint } from "@shared/schema";
 
 interface ARViewProps {
   checkpoints: (Checkpoint & { distance?: number })[];
@@ -32,6 +32,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
   const [cameraPermission, setCameraPermission] = useState<"granted" | "denied" | "prompt">("prompt");
   const [deviceOrientation, setDeviceOrientation] = useState<DeviceOrientation>({ alpha: null, beta: null, gamma: null });
   const [compassHeading, setCompassHeading] = useState<number>(0);
+  const [tappingCheckpoint, setTappingCheckpoint] = useState<number | null>(null);
   const webcamRef = useRef<Webcam>(null);
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
         let heading = event.alpha;
         if ((event as any).webkitCompassHeading !== undefined) {
           heading = (event as any).webkitCompassHeading;
-        } else if (event.alpha !== null) {
+        } else {
           heading = 360 - event.alpha;
         }
         setCompassHeading(heading);
@@ -81,8 +82,16 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
     setCameraPermission("denied");
   }, []);
 
+  const handleTap = (cp: Checkpoint) => {
+    if (cp.collected) return;
+    setTappingCheckpoint(cp.id);
+    setTimeout(() => {
+      onCheckpointTap(cp);
+      setTappingCheckpoint(null);
+    }, 600);
+  };
+
   const nearbyCheckpoints = checkpoints.filter(cp => {
-    if (cp.collected) return false;
     const dist = (cp as any).distance ?? getDistance(
       { latitude: userLat, longitude: userLng },
       { latitude: cp.lat, longitude: cp.lng }
@@ -171,16 +180,23 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
                   transform: "translate(-50%, -50%)",
                 }}
                 className="pointer-events-auto cursor-pointer"
-                onClick={() => pos.distance < 20 && onCheckpointTap(cp)}
+                onClick={() => pos.distance < 20 && handleTap(cp)}
                 data-testid={`ar-checkpoint-${cp.id}`}
               >
                 <div className="relative">
                   <motion.div
-                    animate={{
+                    animate={tappingCheckpoint === cp.id ? {
+                      scale: [1, 2, 0],
+                      rotate: [0, 90, 180],
+                      opacity: [1, 1, 0]
+                    } : {
                       y: [0, -10, 0],
                       scale: pos.distance < 20 ? [1, 1.1, 1] : [1, 0.9, 1],
                     }}
-                    transition={{
+                    transition={tappingCheckpoint === cp.id ? {
+                      duration: 0.6,
+                      ease: "backIn"
+                    } : {
                       duration: 3,
                       repeat: Infinity,
                       ease: "easeInOut",
@@ -188,7 +204,16 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
                     className="relative"
                   >
                     <AnimatePresence mode="wait">
-                      {pos.distance < 20 ? (
+                      {cp.collected ? (
+                        <motion.div
+                          key="collected"
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1.2 }}
+                          className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg border-2 border-white/50"
+                        >
+                          <CheckCircle2 className="w-10 h-10 text-white" />
+                        </motion.div>
+                      ) : pos.distance < 20 ? (
                         <motion.div
                           key="avatar"
                           initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
@@ -222,7 +247,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
                       )}
                     </AnimatePresence>
 
-                    {pos.distance < 20 && (
+                    {pos.distance < 20 && !cp.collected && (
                       <motion.div
                         className="absolute -inset-4 rounded-full border-4 border-green-400/30"
                         animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
@@ -233,12 +258,12 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
 
                   <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full font-bold">
-                      {pos.distance}m
+                      {Math.round(pos.distance)}m
                     </span>
                   </div>
 
-                  {pos.distance < 20 && (
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  {pos.distance < 20 && !cp.collected && (
+                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap">
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse">
                         TAP TO COLLECT
                       </span>
@@ -255,7 +280,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
         <div className="bg-black/50 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-white" />
           <span className="text-white text-sm font-bold">
-            {nearbyCheckpoints.length} checkpoint{nearbyCheckpoints.length !== 1 ? "s" : ""} nearby
+            {nearbyCheckpoints.filter(cp => !cp.collected).length} checkpoint{nearbyCheckpoints.length !== 1 ? "s" : ""} nearby
           </span>
         </div>
       </div>

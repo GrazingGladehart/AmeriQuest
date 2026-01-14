@@ -14,8 +14,8 @@ export interface IStorage {
   addCustomCheckpoint(cp: InsertCustomCheckpoint): Promise<CustomCheckpoint>;
   
   // Settings
-  getSettings(): Promise<{ timeLimit: number }>;
-  updateSettings(timeLimit: number): Promise<void>;
+  getSettings(): Promise<{ timeLimit: number; checkpointCount: number; radius: number }>;
+  updateSettings(timeLimit: number, checkpointCount: number, radius: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -52,18 +52,22 @@ export class DatabaseStorage implements IStorage {
     return newCp;
   }
 
-  async getSettings(): Promise<{ timeLimit: number }> {
+  async getSettings(): Promise<{ timeLimit: number; checkpointCount: number; radius: number }> {
     const [s] = await db.select().from(settings);
-    if (!s) return { timeLimit: 30 };
-    return { timeLimit: s.timeLimit };
+    if (!s) return { timeLimit: 30, checkpointCount: 5, radius: 500 };
+    return { 
+      timeLimit: s.timeLimit,
+      checkpointCount: s.checkpointCount,
+      radius: s.radius
+    };
   }
 
-  async updateSettings(timeLimit: number): Promise<void> {
+  async updateSettings(timeLimit: number, checkpointCount: number, radius: number): Promise<void> {
     const [s] = await db.select().from(settings);
     if (s) {
-      await db.update(settings).set({ timeLimit }).where(eq(settings.id, s.id));
+      await db.update(settings).set({ timeLimit, checkpointCount, radius }).where(eq(settings.id, s.id));
     } else {
-      await db.insert(settings).values({ timeLimit });
+      await db.insert(settings).values({ timeLimit, checkpointCount, radius });
     }
   }
 }

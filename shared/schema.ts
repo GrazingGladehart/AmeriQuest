@@ -21,6 +21,8 @@ export const customCheckpoints = pgTable("custom_checkpoints", {
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
   timeLimit: integer("time_limit").notNull().default(30), // minutes
+  checkpointCount: integer("checkpoint_count").notNull().default(5),
+  radius: integer("radius").notNull().default(500), // meters
 });
 
 export const insertQuestionSchema = createInsertSchema(questions);
