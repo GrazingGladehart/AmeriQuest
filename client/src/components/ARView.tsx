@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import { motion, AnimatePresence } from "framer-motion";
-import { getBearing, getDistance } from "geolib";
+import { getRhumbLineBearing, getDistance } from "geolib";
 import { MapPin, Target, X, Camera, CameraOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Checkpoint } from "@shared/schema";
@@ -52,7 +52,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
             window.addEventListener("deviceorientation", handleOrientation as any, true);
           }
         })
-        .catch(err => {
+        .catch((err: Error) => {
           console.error("Orientation permission error:", err);
         });
     } else {
@@ -75,7 +75,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
 
   const nearbyCheckpoints = checkpoints.filter(cp => {
     if (cp.collected) return false;
-    const dist = cp.distance ?? getDistance(
+    const dist = (cp as any).distance ?? getDistance(
       { latitude: userLat, longitude: userLng },
       { latitude: cp.lat, longitude: cp.lng }
     );
@@ -83,7 +83,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
   });
 
   const getCheckpointScreenPosition = (cp: Checkpoint) => {
-    const bearing = getBearing(
+    const bearing = getRhumbLineBearing(
       { latitude: userLat, longitude: userLng },
       { latitude: cp.lat, longitude: cp.lng }
     );
@@ -95,7 +95,7 @@ export function ARView({ checkpoints, userLat, userLng, onCheckpointTap, onClose
     const fov = 60;
     const screenX = 50 + (relativeBearing / fov) * 100;
 
-    const dist = cp.distance ?? getDistance(
+    const dist = (cp as any).distance ?? getDistance(
       { latitude: userLat, longitude: userLng },
       { latitude: cp.lat, longitude: cp.lng }
     );
