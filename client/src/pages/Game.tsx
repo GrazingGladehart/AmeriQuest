@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getDistance } from "geolib";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Trophy, MapPin, AlertCircle, Camera, Settings, Timer } from "lucide-react";
+import { Loader2, Trophy, MapPin, AlertCircle, Camera, Settings, Timer, Target } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Checkpoint } from "@shared/schema";

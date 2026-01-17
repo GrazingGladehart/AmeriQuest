@@ -2,12 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import { motion, AnimatePresence } from "framer-motion";
 import { getRhumbLineBearing, getDistance } from "geolib";
-import { TreeDeciduous, Dog, Bird, Leaf, X, CameraOff, MapPin, CheckCircle2, Trophy, Clock, Target, Camera, LayoutGrid, BarChart3, TrendingUp, History } from "lucide-react";
+import { TreeDeciduous, Dog, Bird, Leaf, X, CameraOff, MapPin, CheckCircle2, Trophy, Clock, Target, Camera, BarChart3, TrendingUp, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Checkpoint } from "@shared/schema";
 
-// Nature avatars for close-range checkpoints
 const NATURE_AVATARS = [TreeDeciduous, Dog, Bird, Leaf];
 
 const getAvatar = (id: number) => {
@@ -43,7 +42,6 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
   const lastLocation = useRef<{ lat: number; lng: number } | null>(null);
   const webcamRef = useRef<Webcam>(null);
 
-  // Track distance
   useEffect(() => {
     if (userLat && userLng) {
       if (lastLocation.current) {
@@ -51,7 +49,7 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
           { latitude: lastLocation.current.lat, longitude: lastLocation.current.lng },
           { latitude: userLat, longitude: userLng }
         );
-        if (d > 0.5) { // Only count meaningful movement
+        if (d > 0.5) {
           setTotalDistance(prev => prev + d);
         }
       }
@@ -64,7 +62,6 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         setPhotos(prev => [imageSrc, ...prev]);
-        // Visual feedback
         const flash = document.createElement("div");
         flash.className = "fixed inset-0 bg-white z-[100] animate-out fade-out duration-300";
         document.body.appendChild(flash);
@@ -138,14 +135,6 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
     }, 600);
   };
 
-  const nearbyCheckpoints = checkpoints.filter(cp => {
-    const dist = (cp as any).distance ?? getDistance(
-      { latitude: userLat, longitude: userLng },
-      { latitude: cp.lat, longitude: cp.lng }
-    );
-    return dist < 100;
-  });
-
   const getCheckpointScreenPosition = (cp: Checkpoint) => {
     const bearing = getRhumbLineBearing(
       { latitude: userLat, longitude: userLng },
@@ -180,6 +169,14 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
     };
   };
 
+  const nearbyCheckpoints = checkpoints.filter(cp => {
+    const dist = (cp as any).distance ?? getDistance(
+      { latitude: userLat, longitude: userLng },
+      { latitude: cp.lat, longitude: cp.lng }
+    );
+    return dist < 100;
+  });
+
   if (cameraPermission === "denied") {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center text-white p-8">
@@ -209,7 +206,6 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* 2-Minute Warning Timer Overlay */}
       {timeRemaining !== null && timeRemaining <= 120 && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[60]">
           <motion.div
@@ -223,7 +219,6 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
         </div>
       )}
 
-      {/* AR Content */}
       <div className="absolute inset-0 pointer-events-none">
         <AnimatePresence>
           {nearbyCheckpoints.map((cp) => {
@@ -244,7 +239,6 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
                 }}
                 className="pointer-events-auto cursor-pointer"
                 onClick={() => pos.distance < 20 && handleTap(cp)}
-                data-testid={`ar-checkpoint-${cp.id}`}
               >
                 <div className="relative">
                   <motion.div
@@ -256,75 +250,33 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
                       y: [0, -10, 0],
                       scale: pos.distance < 20 ? [1, 1.1, 1] : [1, 0.9, 1],
                     }}
-                    transition={tappingCheckpoint === cp.id ? {
-                      duration: 0.6,
-                      ease: "backIn"
-                    } : {
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                    transition={tappingCheckpoint === cp.id ? { duration: 0.6, ease: "backIn" } : { duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     className="relative"
                   >
                     <AnimatePresence mode="wait">
                       {cp.collected ? (
-                        <motion.div
-                          key="collected"
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1.2 }}
-                          className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg border-2 border-white/50"
-                        >
+                        <motion.div key="collected" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1.2 }} className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg border-2 border-white/50">
                           <CheckCircle2 className="w-10 h-10 text-white" />
                         </motion.div>
                       ) : pos.distance < 20 ? (
-                        <motion.div
-                          key="avatar"
-                          initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
-                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                          exit={{ opacity: 0, scale: 0.5, rotate: 20 }}
-                          className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center shadow-2xl ring-4 ring-green-300/50"
-                        >
+                        <motion.div key="avatar" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }} className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center shadow-2xl ring-4 ring-green-300/50">
                           {getAvatar(cp.id)}
                         </motion.div>
                       ) : (
-                        <motion.div
-                          key="orb"
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ 
-                            opacity: 1, 
-                            scale: 1,
-                            boxShadow: [
-                              "0 0 20px rgba(74, 222, 128, 0.4)",
-                              "0 0 40px rgba(74, 222, 128, 0.8)",
-                              "0 0 20px rgba(74, 222, 128, 0.4)"
-                            ]
-                          }}
-                          exit={{ opacity: 0, scale: 0.5 }}
-                          transition={{
-                            boxShadow: { duration: 2, repeat: Infinity }
-                          }}
-                          className="w-12 h-12 rounded-full bg-green-400/80 backdrop-blur-sm border-2 border-green-300 flex items-center justify-center"
-                        >
+                        <motion.div key="orb" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1, boxShadow: ["0 0 20px rgba(74, 222, 128, 0.4)", "0 0 40px rgba(74, 222, 128, 0.8)", "0 0 20px rgba(74, 222, 128, 0.4)"] }} exit={{ opacity: 0, scale: 0.5 }} transition={{ boxShadow: { duration: 2, repeat: Infinity } }} className="w-12 h-12 rounded-full bg-green-400/80 backdrop-blur-sm border-2 border-green-300 flex items-center justify-center">
                           <div className="w-4 h-4 rounded-full bg-white blur-[2px] animate-pulse" />
                         </motion.div>
                       )}
                     </AnimatePresence>
-
                     {pos.distance < 20 && !cp.collected && (
-                      <motion.div
-                        className="absolute -inset-4 rounded-full border-4 border-green-400/30"
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
+                      <motion.div className="absolute -inset-4 rounded-full border-4 border-green-400/30" animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }} transition={{ duration: 2, repeat: Infinity }} />
                     )}
                   </motion.div>
-
                   <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full font-bold">
                       {Math.round(pos.distance)}m
                     </span>
                   </div>
-
                   {pos.distance < 20 && !cp.collected && (
                     <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap">
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse">
@@ -339,153 +291,80 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
         </AnimatePresence>
       </div>
 
-      {/* Top Bar Controls */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-[70]">
-        <Button
-          size="icon"
-          variant="secondary"
-          onClick={() => setShowStats(true)}
-          className="rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 border-white/20"
-        >
+        <Button size="icon" variant="secondary" onClick={() => setShowStats(true)} className="rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 border-white/20">
           <BarChart3 className="w-5 h-5 text-white" />
         </Button>
-
         <div className="flex gap-2">
           {photos.length > 0 && (
-            <Button
-              size="icon"
-              variant="secondary"
-              onClick={() => setShowGallery(true)}
-              className="rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 border-white/20 relative"
-            >
+            <Button size="icon" variant="secondary" onClick={() => setShowGallery(true)} className="rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 border-white/20 relative">
               <History className="w-5 h-5 text-white" />
               <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border border-white">
                 {photos.length}
               </span>
             </Button>
           )}
-          <Button
-            size="icon"
-            variant="secondary"
-            onClick={onClose}
-            className="rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 border-white/20"
-          >
+          <Button size="icon" variant="secondary" onClick={onClose} className="rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 border-white/20">
             <X className="w-5 h-5 text-white" />
           </Button>
         </div>
       </div>
 
-      {/* Bottom Camera Button */}
       <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-[70]">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={capturePhoto}
-          className="w-20 h-20 rounded-full border-4 border-white shadow-2xl bg-white/20 backdrop-blur-sm hover:bg-white/40 active:scale-95 transition-all flex items-center justify-center p-0"
-        >
+        <Button size="icon" variant="ghost" onClick={capturePhoto} className="w-20 h-20 rounded-full border-4 border-white shadow-2xl bg-white/20 backdrop-blur-sm hover:bg-white/40 active:scale-95 transition-all flex items-center justify-center p-0">
           <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
             <Camera className="w-8 h-8 text-black" />
           </div>
         </Button>
       </div>
 
-      {/* Stats Overlay Modal */}
       <AnimatePresence>
         {showStats && (
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-lg p-6 flex items-center justify-center"
-          >
+          <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }} className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-lg p-6 flex items-center justify-center">
             <Card className="w-full max-w-sm bg-slate-900 border-white/10 text-white p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4">
-                <Button variant="ghost" size="icon" onClick={() => setShowStats(false)}>
-                  <X className="w-5 h-5" />
-                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setShowStats(false)}><X className="w-5 h-5" /></Button>
               </div>
-
               <h2 className="text-2xl font-black font-display mb-6 flex items-center gap-2 text-primary">
-                <BarChart3 className="w-6 h-6" />
-                Mission Stats
+                <BarChart3 className="w-6 h-6" /> Mission Stats
               </h2>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1">
-                    <Trophy className="w-3 h-3 text-yellow-500" />
-                    Points
-                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Trophy className="w-3 h-3 text-yellow-500" /> Points</div>
                   <div className="text-2xl font-black text-white">{score}</div>
                 </div>
-
                 <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1">
-                    <TrendingUp className="w-3 h-3 text-emerald-500" />
-                    Accuracy
-                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><TrendingUp className="w-3 h-3 text-emerald-500" /> Accuracy</div>
                   <div className="text-2xl font-black text-white">{accuracy}%</div>
                 </div>
-
                 <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1">
-                    <Target className="w-3 h-3 text-primary" />
-                    Remaining
-                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><Target className="w-3 h-3 text-primary" /> Remaining</div>
                   <div className="text-2xl font-black text-white">{remainingCount}</div>
                 </div>
-
                 <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1">
-                    <MapPin className="w-3 h-3 text-blue-500" />
-                    Distance
-                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase mb-1"><MapPin className="w-3 h-3 text-blue-500" /> Distance</div>
                   <div className="text-2xl font-black text-white">{Math.round(totalDistance)}m</div>
                 </div>
               </div>
-
               <div className="mt-6 p-4 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold">Time Left</span>
-                </div>
-                <span className="text-xl font-mono font-black text-primary">
-                  {timeRemaining ? formatTime(timeRemaining) : "--:--"}
-                </span>
+                <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /><span className="text-sm font-bold">Time Left</span></div>
+                <span className="text-xl font-mono font-black text-primary">{timeRemaining ? formatTime(timeRemaining) : "--:--"}</span>
               </div>
             </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Gallery Modal */}
       <AnimatePresence>
         {showGallery && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-xl p-6 flex flex-col"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-xl p-6 flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-black font-display text-white flex items-center gap-2">
-                <History className="w-6 h-6 text-primary" />
-                Mission Photos
-              </h2>
-              <Button variant="secondary" size="icon" className="rounded-full" onClick={() => setShowGallery(false)}>
-                <X className="w-5 h-5" />
-              </Button>
+              <h2 className="text-2xl font-black font-display text-white flex items-center gap-2"><History className="w-6 h-6 text-primary" /> Mission Photos</h2>
+              <Button variant="secondary" size="icon" className="rounded-full" onClick={() => setShowGallery(false)}><X className="w-5 h-5" /></Button>
             </div>
-
             <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-4 pb-12">
               {photos.map((src, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="aspect-[3/4] rounded-2xl overflow-hidden border-2 border-white/10 relative group"
-                >
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="aspect-[3/4] rounded-2xl overflow-hidden border-2 border-white/10 relative group">
                   <img src={src} className="w-full h-full object-cover" alt={`Mission photo ${i}`} />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <span className="text-white text-xs font-bold uppercase tracking-wider">Saved to Session</span>
@@ -500,13 +379,9 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
       <div className="absolute bottom-32 left-0 right-0 flex justify-center pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-white" />
-          <span className="text-white text-sm font-bold">
-            {remainingCount} checkpoint{remainingCount !== 1 ? "s" : ""} left
-          </span>
+          <span className="text-white text-sm font-bold">{remainingCount} checkpoint{remainingCount !== 1 ? "s" : ""} left</span>
         </div>
       </div>
     </div>
   );
-}
-
 }
