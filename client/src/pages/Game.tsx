@@ -212,9 +212,15 @@ export default function Game() {
             Explore your surroundings to find hidden energy points. Answer questions correctly to collect them!
           </p>
 
-          <div className="flex items-center gap-2 mb-6 text-muted-foreground">
-            <Timer className="w-4 h-4" />
-            <span className="text-sm">Time Limit: {settingsQuery.data?.timeLimit ?? 30} minutes</span>
+          <div className="flex flex-col items-center gap-2 mb-6 text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Timer className="w-4 h-4" />
+              <span className="text-sm">Time Limit: {settingsQuery.data?.timeLimit ?? 30} minutes</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              <span className="text-sm">Checkpoints: {settingsQuery.data?.checkpointCount ?? 5}</span>
+            </div>
           </div>
           
           <Button 
@@ -238,146 +244,19 @@ export default function Game() {
     );
   }
 
-  // 4. Game Over Screen
-  if (gameOver) {
-    const collected = checkpoints.filter(c => c.collected).length;
-    const handlePlayAgain = () => {
-      setGameOver(false);
-      setGameActive(false);
-      setCheckpoints([]);
-      setScore(0);
-      setTimeRemaining(null);
-    };
-
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-background via-purple-50 to-blue-50">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-md"
-        >
-          <div className="bg-yellow-100 p-6 rounded-full inline-block mb-6">
-            <Trophy className="w-16 h-16 text-yellow-500" />
-          </div>
-          
-          <h1 className="text-4xl font-black font-display text-foreground mb-4">
-            Time's Up!
-          </h1>
-          
-          <div className="bg-card rounded-2xl p-6 shadow-lg mb-6">
-            <div className="text-5xl font-black font-display text-primary mb-2">
-              {score}
-            </div>
-            <div className="text-muted-foreground">
-              Final Score
-            </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <span className="text-lg font-bold">
-                {collected} / {checkpoints.length}
-              </span>
-              <div className="text-sm text-muted-foreground">Checkpoints Collected</div>
-            </div>
-          </div>
-          
-          <Button 
-            onClick={handlePlayAgain}
-            className="w-full btn-game h-14 text-lg bg-primary hover:bg-primary/90 text-white"
-            data-testid="button-play-again"
-          >
-            Play Again
-          </Button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // 5. Active Game UI
+  // Active Game directly in AR
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* AR View Overlay */}
-      {showARView && lat && lng && (
-        <ARView
-          checkpoints={sortedCheckpoints}
-          userLat={lat}
-          userLng={lng}
-          onCheckpointTap={handleARCheckpointTap}
-          onClose={() => setShowARView(false)}
-        />
-      )}
+    <div className="min-h-screen bg-black overflow-hidden">
+      <ARView
+        checkpoints={sortedCheckpoints}
+        userLat={lat}
+        userLng={lng}
+        score={score}
+        timeRemaining={timeRemaining}
+        onCheckpointTap={handleARCheckpointTap}
+        onClose={() => setGameActive(false)}
+      />
 
-      {/* Header Stats */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 shadow-sm">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-2">
-          <div className="flex flex-col">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Score</span>
-            <div className="text-2xl font-black font-display text-primary flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-              {score}
-            </div>
-          </div>
-          
-          {/* Timer */}
-          {timeRemaining !== null && (
-            <div className={`flex flex-col items-center px-3 py-1 rounded-lg ${timeRemaining < 60 ? 'bg-red-100' : 'bg-muted/50'}`}>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Time</span>
-              <div className={`text-xl font-mono font-bold ${timeRemaining < 60 ? 'text-red-600' : 'text-foreground'}`}>
-                {formatTime(timeRemaining)}
-              </div>
-            </div>
-          )}
-          
-          <div className="text-right">
-             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Found</span>
-             <div className="text-xl font-bold font-display text-foreground">
-               {checkpoints.filter(c => c.collected).length} / {checkpoints.length}
-             </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="px-4 py-6 max-w-md mx-auto space-y-6">
-        
-        {/* Status Card with AR Toggle */}
-        <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-none shadow-xl overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
-          <div className="p-6 relative z-10 text-center">
-            <Radar />
-            <h2 className="text-xl font-bold font-display mb-1">Scanning Sector...</h2>
-            <p className="text-indigo-100 text-sm mb-4">Find and collect checkpoints in AR mode.</p>
-            
-            <Button
-              onClick={() => setShowARView(true)}
-              variant="secondary"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-              data-testid="button-ar-view"
-            >
-              <Camera className="w-4 h-4 mr-2" />
-              Open AR View
-            </Button>
-          </div>
-        </Card>
-
-        {/* Checkpoints Stats */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="font-bold text-slate-400 text-sm uppercase tracking-wider">Mission Progress</h3>
-            <Badge variant="secondary" className="bg-white text-slate-500 shadow-sm">
-              <MapPin className="w-3 h-3 mr-1" />
-              Scanning
-            </Badge>
-          </div>
-
-          <Card className="p-4 bg-white/50 backdrop-blur-sm border-dashed border-2">
-            <p className="text-center text-sm text-muted-foreground italic">
-              Checkpoints are only visible in AR view. Use the button above to start collecting!
-            </p>
-          </Card>
-        </div>
-      </main>
-
-      {/* Question Dialog Popup */}
       <QuestionDialog 
         open={!!activeQuestion} 
         onOpenChange={(open) => !open && setActiveQuestion(null)}
