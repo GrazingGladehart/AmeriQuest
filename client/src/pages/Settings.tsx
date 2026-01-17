@@ -18,10 +18,11 @@ export default function Settings() {
   
   const [timeLimit, setTimeLimit] = useState(30);
   const [checkpointCount, setCheckpointCount] = useState(5);
+  const [rovingCount, setRovingCount] = useState(2);
   const [radius, setRadius] = useState(500);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
 
-  const settingsQuery = useQuery<{ timeLimit: number; checkpointCount: number; radius: number }>({
+  const settingsQuery = useQuery<{ timeLimit: number; checkpointCount: number; rovingCount: number; radius: number }>({
     queryKey: ["/api/settings"],
   });
 
@@ -30,7 +31,7 @@ export default function Settings() {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: async (data: { timeLimit: number; checkpointCount: number; radius: number }) => {
+    mutationFn: async (data: { timeLimit: number; checkpointCount: number; rovingCount: number; radius: number }) => {
       return apiRequest("POST", "/api/settings", data);
     },
     onSuccess: () => {
@@ -53,12 +54,13 @@ export default function Settings() {
     if (settingsQuery.data) {
       setTimeLimit(settingsQuery.data.timeLimit);
       setCheckpointCount(settingsQuery.data.checkpointCount ?? 5);
+      setRovingCount(settingsQuery.data.rovingCount ?? 2);
       setRadius(settingsQuery.data.radius ?? 500);
     }
   }, [settingsQuery.data]);
 
   const handleSaveSettings = () => {
-    updateSettingsMutation.mutate({ timeLimit, checkpointCount, radius });
+    updateSettingsMutation.mutate({ timeLimit, checkpointCount, rovingCount, radius });
   };
 
   const handleAddCheckpoint = () => {
@@ -143,6 +145,23 @@ export default function Settings() {
                 step={10}
                 onValueChange={(val) => setRadius(val[0])}
                 data-testid="slider-radius"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="flex items-center gap-2">
+                  <Move className="w-4 h-4 text-orange-500" />
+                  Roving Checkpoints: {rovingCount}
+                </Label>
+              </div>
+              <Slider
+                value={[rovingCount]}
+                min={0}
+                max={10}
+                step={1}
+                onValueChange={(val) => setRovingCount(val[0])}
+                data-testid="slider-roving-count"
               />
             </div>
           </div>

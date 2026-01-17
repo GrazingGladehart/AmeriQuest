@@ -22,6 +22,7 @@ export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
   timeLimit: integer("time_limit").notNull().default(30), // minutes
   checkpointCount: integer("checkpoint_count").notNull().default(5),
+  rovingCount: integer("roving_count").notNull().default(2),
   radius: integer("radius").notNull().default(500), // meters
 });
 
@@ -45,6 +46,7 @@ export const checkpointSchema = z.object({
   points: z.number(),
   collected: z.boolean().optional(),
   isCustom: z.boolean().optional(),
+  isRoving: z.boolean().optional(),
 });
 
 export type Checkpoint = z.infer<typeof checkpointSchema>;

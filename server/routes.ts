@@ -14,8 +14,11 @@ export async function registerRoutes(
   app.post(api.game.generate.path, async (req, res) => {
     try {
       const { lat, lng, radius, count } = api.game.generate.input.parse(req.body);
+      const gameSettings = await storage.getSettings();
+      const rovingCount = gameSettings.rovingCount ?? 2;
       
-      const randomQuestions = await storage.getRandomQuestions(count);
+      const totalCount = count + rovingCount;
+      const randomQuestions = await storage.getRandomQuestions(totalCount);
       const customCheckpoints = await storage.getCustomCheckpoints();
       
       const minDistanceFromCenter = 7; // meters
@@ -23,17 +26,16 @@ export async function registerRoutes(
       const generatedCoords: {lat: number, lng: number}[] = [];
 
       const checkpoints = [
-        ...randomQuestions.map(q => {
+        ...randomQuestions.map((q, index) => {
           let attempts = 0;
-          let x = 0, y = 0;
           let finalLat = lat, finalLng = lng;
+          const isRoving = index >= count;
           
           while (attempts < 50) {
-            // Ensure radius is scaled correctly and use square root for uniform distribution within circle
             const r = (minDistanceFromCenter + Math.sqrt(Math.random()) * (radius - minDistanceFromCenter)) / 111000;
             const t = 2 * Math.PI * Math.random();
-            x = r * Math.cos(t);
-            y = r * Math.sin(t) / Math.cos(lat * Math.PI / 180);
+            const x = r * Math.cos(t);
+            const y = r * Math.sin(t) / Math.cos(lat * Math.PI / 180);
             
             finalLat = lat + x;
             finalLng = lng + y;
@@ -55,9 +57,10 @@ export async function registerRoutes(
             lng: finalLng,
             question: q.question,
             options: q.options,
-            points: q.points,
+            points: isRoving ? q.points * 2 : q.points,
             collected: false,
-            isCustom: false
+            isCustom: false,
+            isRoving
           };
         }),
         ...customCheckpoints.map(cp => ({
@@ -68,13 +71,14 @@ export async function registerRoutes(
           options: cp.question.options,
           points: cp.question.points,
           collected: false,
-          isCustom: true
+          isCustom: true,
+          isRoving: false
         }))
       ];
 
       res.json(checkpoints);
     } catch (err) {
-      // ... same error handling
+      res.status(400).json({ message: "Generation failed" });
     }
   });
 
@@ -91,8 +95,8 @@ export async function registerRoutes(
 
   app.post(api.game.updateSettings.path, async (req, res) => {
     try {
-      const { timeLimit, checkpointCount, radius } = req.body;
-      await storage.updateSettings(timeLimit, checkpointCount, radius);
+      const { timeLimit, checkpointCount, rovingCount, radius } = req.body;
+      await storage.updateSettings(timeLimit, checkpointCount, rovingCount, radius);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Invalid settings" });
