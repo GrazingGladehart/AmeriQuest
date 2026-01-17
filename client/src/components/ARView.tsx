@@ -376,7 +376,21 @@ export function ARView({ checkpoints, userLat, userLng, score, timeRemaining, on
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-32 left-0 right-0 flex justify-center pointer-events-none">
+      <div className="absolute bottom-32 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none">
+        <div className="bg-black/50 backdrop-blur-sm rounded-2xl px-4 py-2 flex items-center gap-4 text-white text-[10px] font-bold uppercase tracking-wider border border-white/10">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-green-400" />
+            <span>Orb (Far)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-600" />
+            <span>Nature (Near)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <span>Found</span>
+          </div>
+        </div>
         <div className="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-white" />
           <span className="text-white text-sm font-bold">{remainingCount} checkpoint{remainingCount !== 1 ? "s" : ""} left</span>
