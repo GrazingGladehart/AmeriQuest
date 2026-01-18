@@ -5,38 +5,38 @@
 @tailwind utilities;
 
 :root {
-  /* Nature/Woodsy Game Palette */
+  /* Playful Mobile Game Palette */
   --font-display: 'Fredoka', cursive;
   --font-body: 'Nunito', sans-serif;
 
-  /* HSL Values - Forest Greens & Earthy Tones */
-  --background: 140 25% 98%;    /* Very light sage */
-  --foreground: 140 40% 15%;    /* Deep forest green text */
+  /* HSL Values */
+  --background: 210 50% 98%;    /* Soft blue-ish white */
+  --foreground: 222 47% 20%;    /* Deep navy text */
   
-  /* Vibrant Primary: Leaf Green */
-  --primary: 142 70% 35%;
-  --primary-foreground: 140 10% 98%;
+  /* Vibrant Primary: Electric Blue/Purple */
+  --primary: 250 85% 60%;
+  --primary-foreground: 0 0% 100%;
   
-  /* Secondary: Oak Wood Brown */
-  --secondary: 35 40% 45%;
-  --secondary-foreground: 35 10% 98%;
+  /* Secondary: Fun Yellow/Orange */
+  --secondary: 45 100% 55%;
+  --secondary-foreground: 30 50% 10%;
   
-  /* Accent: Wildflower Berry */
-  --accent: 330 70% 50%;
+  /* Accent: Hot Pink */
+  --accent: 330 85% 60%;
   --accent-foreground: 0 0% 100%;
   
-  /* Success: Bright Moss */
-  --success: 120 60% 45%;
+  /* Success: Lush Green */
+  --success: 150 70% 45%;
   
-  --muted: 140 15% 92%;
-  --muted-foreground: 140 20% 40%;
+  --muted: 210 20% 90%;
+  --muted-foreground: 215 20% 40%;
   
   --card: 0 0% 100%;
-  --card-foreground: 140 40% 15%;
+  --card-foreground: 222 47% 20%;
   
-  --border: 140 20% 88%;
-  --input: 140 20% 88%;
-  --ring: 142 70% 35%;
+  --border: 214 32% 90%;
+  --input: 214 32% 90%;
+  --ring: 250 85% 60%;
   
   --radius: 1rem;
 }
@@ -45,27 +45,9 @@
   body {
     @apply bg-background text-foreground antialiased overflow-x-hidden;
     font-family: var(--font-body);
-    /* Leafy background texture */
-    background-image: url("@assets/stock_images/subtle_forest_leaves_fe2b25a9.jpg");
-    background-size: 300px;
-    background-repeat: repeat;
-    background-attachment: fixed;
-    position: relative;
-  }
-
-  body::after {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      rgba(240, 248, 240, 0.93),
-      rgba(240, 248, 240, 0.88)
-    );
-    z-index: -1;
-    pointer-events: none;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(250, 200, 255, 0.2) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(180, 220, 255, 0.3) 0%, transparent 25%);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -84,24 +66,12 @@
   }
 
   .card-game {
-    @apply bg-card/90 rounded-3xl border-2 border-white/50 shadow-lg shadow-primary/5 backdrop-blur-md;
+    @apply bg-card rounded-3xl border-2 border-white/50 shadow-lg shadow-primary/5 backdrop-blur-sm;
   }
 
   .text-shadow {
     text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
   }
-}
-
-/* Subtle animation for the leafy texture */
-@keyframes leaf-drift {
-  0% { background-position: 0 0; }
-  100% { background-position: 300px 300px; }
-}
-
-.woodsy-texture {
-  background-image: url("@assets/stock_images/subtle_forest_leaves_fe2b25a9.jpg");
-  background-size: 200px;
-  animation: leaf-drift 60s linear infinite;
 }
 
 /* Custom Animations */

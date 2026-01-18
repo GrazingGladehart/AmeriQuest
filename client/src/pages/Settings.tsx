@@ -95,8 +95,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen woodsy-texture p-4">
-      <div className="max-w-md mx-auto space-y-6 relative z-10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-purple-50 to-blue-50 p-4">
+      <div className="max-w-md mx-auto space-y-6">
         <div className="flex items-center gap-4 mb-6">
           <Link href="/">
             <Button variant="ghost" size="icon" data-testid="button-back">
