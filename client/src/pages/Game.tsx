@@ -15,6 +15,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Checkpoint } from "@shared/schema";
 import { NatureScavengerHunt } from "@/components/NatureScavengerHunt";
+import { LeafBackground } from "@/components/layout/LeafBackground";
 
 export default function Game() {
   const { lat, lng, error: geoError, loading: geoLoading } = useGeolocation();
@@ -153,8 +154,9 @@ export default function Game() {
     const todayPoints = stats?.pointsHistory?.find((h: any) => h.date === new Date().toISOString().split('T')[0])?.points ?? 0;
 
     return (
-      <div className="min-h-screen flex flex-col p-6 bg-gradient-to-b from-green-50 to-green-100">
-        <div className="max-w-md mx-auto w-full space-y-6">
+      <div className="min-h-screen flex flex-col p-6 bg-gradient-to-b from-green-50 to-green-100 relative overflow-hidden">
+        <LeafBackground />
+        <div className="max-w-md mx-auto w-full space-y-6 relative z-10">
           <div className="flex justify-between items-start pt-4">
             <div>
               <h1 className="text-4xl font-black text-green-900 leading-none flex items-center gap-2">
@@ -242,8 +244,9 @@ export default function Game() {
 
   if (gameMode === "nature") {
     return (
-      <div className="min-h-screen bg-green-50 p-6">
-        <div className="max-w-md mx-auto space-y-6">
+      <div className="min-h-screen bg-green-50 p-6 relative overflow-hidden">
+        <LeafBackground />
+        <div className="max-w-md mx-auto space-y-6 relative z-10">
           <Button 
             variant="ghost" 
             onClick={() => setGameMode("menu")}
