@@ -26,6 +26,16 @@ export const settings = pgTable("settings", {
   radius: integer("radius").notNull().default(500), // meters
 });
 
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  totalPoints: integer("total_points").notNull().default(0),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActivityDate: text("last_activity_date"),
+  huntsCompleted: integer("hunts_completed").notNull().default(0),
+  pointsHistory: jsonb("points_history").$type<{date: string, points: number}[]>().notNull().default([]),
+});
+
 export const insertQuestionSchema = createInsertSchema(questions);
 export type Question = typeof questions.$inferSelect;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
@@ -36,6 +46,10 @@ export type InsertCustomCheckpoint = z.infer<typeof insertCustomCheckpointSchema
 
 export const insertSettingsSchema = createInsertSchema(settings);
 export type Settings = typeof settings.$inferSelect;
+
+export const insertUserStatsSchema = createInsertSchema(userStats);
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
 
 export const checkpointSchema = z.object({
   id: z.number(),

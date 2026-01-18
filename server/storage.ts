@@ -1,5 +1,6 @@
 import { db } from "./db";
-import { questions, type Question, type InsertQuestion, customCheckpoints, settings, type CustomCheckpoint, type InsertCustomCheckpoint } from "@shared/schema";
+import { db } from "./db";
+import { questions, type Question, type InsertQuestion, customCheckpoints, settings, type CustomCheckpoint, type InsertCustomCheckpoint, userStats, type UserStats, type InsertUserStats } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 
 export interface IStorage {
@@ -16,6 +17,11 @@ export interface IStorage {
   // Settings
   getSettings(): Promise<{ timeLimit: number; checkpointCount: number; rovingCount: number; radius: number }>;
   updateSettings(timeLimit: number, checkpointCount: number, rovingCount: number, radius: number): Promise<void>;
+
+  // User Stats
+  getUserStats(): Promise<UserStats>;
+  updateUserStats(stats: Partial<UserStats>): Promise<UserStats>;
+  addPoints(points: number): Promise<UserStats>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -76,6 +82,56 @@ export class DatabaseStorage implements IStorage {
     } else {
       await db.insert(settings).values({ timeLimit, checkpointCount, rovingCount, radius });
     }
+  }
+
+  async getUserStats(): Promise<UserStats> {
+    const [stats] = await db.select().from(userStats);
+    if (!stats) {
+      const [newStats] = await db.insert(userStats).values({
+        totalPoints: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        huntsCompleted: 0,
+        pointsHistory: []
+      }).returning();
+      return newStats;
+    }
+    return stats;
+  }
+
+  async updateUserStats(statsUpdate: Partial<UserStats>): Promise<UserStats> {
+    const stats = await this.getUserStats();
+    const [updated] = await db.update(userStats)
+      .set(statsUpdate)
+      .where(eq(userStats.id, stats.id))
+      .returning();
+    return updated;
+  }
+
+  async addPoints(points: number): Promise<UserStats> {
+    const stats = await this.getUserStats();
+    const today = new Date().toISOString().split('T')[0];
+    
+    let history = [...stats.pointsHistory];
+    const todayIndex = history.findIndex(h => h.date === today);
+    
+    if (todayIndex >= 0) {
+      history[todayIndex].points += points;
+    } else {
+      history.push({ date: today, points });
+    }
+
+    // Keep only last 30 days
+    if (history.length > 30) history = history.slice(-30);
+
+    const [updated] = await db.update(userStats)
+      .set({ 
+        totalPoints: stats.totalPoints + points,
+        pointsHistory: history
+      })
+      .where(eq(userStats.id, stats.id))
+      .returning();
+    return updated;
   }
 }
 
