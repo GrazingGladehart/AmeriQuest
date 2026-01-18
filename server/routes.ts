@@ -4,6 +4,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { openai } from "./replit_integrations/image/client";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -176,26 +177,63 @@ export async function registerRoutes(
     res.json(updated);
   });
 
-  // Photo Verification (Mocked if no API key)
+  // Photo Verification using OpenAI Vision
   app.post("/api/verify-photo", async (req, res) => {
-    const { itemName, image } = req.body;
-    
-    // In a real app, you'd use Anthropic here. 
-    // For now, we'll simulate a 85% success rate to keep the game playable.
-    const isSuccess = Math.random() > 0.15;
-    
-    if (isSuccess) {
-      await storage.addPoints(25);
+    try {
+      const { itemName, image } = req.body;
+      
+      if (!image) {
+        return res.status(400).json({ message: "Image is required" });
+      }
+
+      // Extract base64 part from data URL if present
+      const base64Image = image.includes(",") ? image.split(",")[1] : image;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `You are an expert nature guide. Identify if there is a ${itemName} in this image. 
+                Respond ONLY with a JSON object in this format: 
+                {
+                  "verified": boolean,
+                  "confidence": number (0-100),
+                  "feedback": "a short, encouraging sentence explaining why it is or isn't the item"
+                }`
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+      const isSuccess = result.verified && result.confidence > 70;
+      
+      if (isSuccess) {
+        await storage.addPoints(25);
+      }
+      
+      res.json({
+        verified: isSuccess,
+        confidence: result.confidence,
+        feedback: result.feedback,
+        points: isSuccess ? 25 : 0
+      });
+    } catch (err) {
+      console.error("Vision verification failed:", err);
+      res.status(500).json({ message: "Failed to analyze image" });
     }
-    
-    res.json({
-      verified: isSuccess,
-      confidence: isSuccess ? 85 + Math.random() * 10 : 20 + Math.random() * 20,
-      feedback: isSuccess 
-        ? `Great find! That definitely looks like a ${itemName}. +25 points!` 
-        : `Hmm, that doesn't quite look like a ${itemName}. Try getting a clearer shot!`,
-      points: isSuccess ? 25 : 0
-    });
   });
 
   // Seed Data if empty
