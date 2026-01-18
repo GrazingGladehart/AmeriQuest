@@ -183,7 +183,7 @@ export async function registerRoutes(
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     
-    let { currentStreak, longestStreak, lastActivityDate, huntsCompleted, streakFreezes } = stats;
+    let { currentStreak, longestStreak, lastActivityDate, huntsCompleted, streakFreezes, activityDates } = stats;
     
     const hasToday = lastActivityDate === today;
     const hasYesterday = lastActivityDate === yesterday;
@@ -192,7 +192,6 @@ export async function registerRoutes(
       if (hasYesterday) {
         currentStreak++;
       } else if (streakFreezes > 0) {
-        // Use a streak freeze if missed a day
         streakFreezes--;
         currentStreak++;
       } else {
@@ -200,17 +199,22 @@ export async function registerRoutes(
       }
     }
     
-    // Completing quest gifts a streak freeze
     streakFreezes++;
     
     if (currentStreak > longestStreak) longestStreak = currentStreak;
+    
+    const updatedActivityDates = activityDates || [];
+    if (!updatedActivityDates.includes(today)) {
+      updatedActivityDates.push(today);
+    }
     
     const updated = await storage.updateUserStats({
       currentStreak,
       longestStreak,
       lastActivityDate: today,
       huntsCompleted: huntsCompleted + 1,
-      streakFreezes
+      streakFreezes,
+      activityDates: updatedActivityDates
     });
     
     res.json(updated);

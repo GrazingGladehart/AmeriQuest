@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getDistance } from "geolib";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Trophy, MapPin, AlertCircle, Camera, Settings, Timer, Target, Map as MapIcon, Leaf, Sparkles, Flame, Calendar } from "lucide-react";
+import { Loader2, Trophy, MapPin, AlertCircle, Camera, Settings, Timer, Target, Map as MapIcon, Leaf, Sparkles, Flame, Calendar, Snowflake, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -26,6 +26,7 @@ export default function Game() {
   const { lat, lng, error: geoError, loading: geoLoading } = useGeolocation();
   const generateGameMutation = useGenerateGame();
   const verifyAnswerMutation = useVerifyAnswer();
+  const { toast } = useToast();
   
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [score, setScore] = useState(0);
@@ -198,11 +199,18 @@ export default function Game() {
               </h1>
               <p className="text-green-700 font-medium">Nature Explorer</p>
             </div>
-            <Link href="/settings">
-              <Button variant="outline" size="icon" className="rounded-full bg-white/50 backdrop-blur-sm border-green-200">
-                <Settings className="w-5 h-5 text-green-700" />
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/stats">
+                <Button variant="outline" size="icon" className="rounded-full bg-white/50 backdrop-blur-sm border-green-200" data-testid="button-stats">
+                  <BarChart3 className="w-5 h-5 text-green-700" />
+                </Button>
+              </Link>
+              <Link href="/settings">
+                <Button variant="outline" size="icon" className="rounded-full bg-white/50 backdrop-blur-sm border-green-200" data-testid="button-settings">
+                  <Settings className="w-5 h-5 text-green-700" />
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <Card className="p-6 border-none shadow-xl bg-white/80 backdrop-blur-md">
@@ -220,7 +228,7 @@ export default function Game() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-green-100 pt-6">
+            <div className="mt-6 grid grid-cols-4 gap-2 border-t border-green-100 pt-6">
               <div className="text-center">
                 <p className="text-[10px] font-bold text-gray-400 uppercase">Total</p>
                 <p className="text-lg font-black text-gray-700">{stats?.totalPoints ?? 0}</p>
@@ -229,9 +237,16 @@ export default function Game() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase">Best</p>
                 <p className="text-lg font-black text-gray-700">{stats?.longestStreak ?? 0}</p>
               </div>
-              <div className="text-center">
+              <div className="text-center border-r border-green-50">
                 <p className="text-[10px] font-bold text-gray-400 uppercase">Hunts</p>
                 <p className="text-lg font-black text-gray-700">{stats?.huntsCompleted ?? 0}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-cyan-500 uppercase flex items-center justify-center gap-1">
+                  <Snowflake className="w-3 h-3" />
+                  Freezes
+                </p>
+                <p className="text-lg font-black text-cyan-600" data-testid="text-streak-freezes">{stats?.streakFreezes ?? 0}</p>
               </div>
             </div>
           </Card>

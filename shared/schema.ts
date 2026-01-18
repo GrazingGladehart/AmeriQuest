@@ -37,6 +37,7 @@ export const userStats = pgTable("user_stats", {
   huntsCompleted: integer("hunts_completed").notNull().default(0),
   streakFreezes: integer("streak_freezes").notNull().default(0),
   pointsHistory: jsonb("points_history").$type<{date: string, points: number}[]>().notNull().default([]),
+  activityDates: jsonb("activity_dates").$type<string[]>().notNull().default([]),
 });
 
 export const insertQuestionSchema = createInsertSchema(questions);

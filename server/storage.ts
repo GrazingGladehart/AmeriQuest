@@ -97,7 +97,8 @@ export class DatabaseStorage implements IStorage {
         currentStreak: 0,
         longestStreak: 0,
         huntsCompleted: 0,
-        pointsHistory: []
+        pointsHistory: [],
+        activityDates: []
       }).returning();
       return newStats;
     }
@@ -127,11 +128,17 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (history.length > 30) history = history.slice(-30);
+    
+    const activityDates = stats.activityDates || [];
+    if (!activityDates.includes(today)) {
+      activityDates.push(today);
+    }
 
     const [updated] = await db.update(userStats)
       .set({ 
         totalPoints: stats.totalPoints + points,
-        pointsHistory: history
+        pointsHistory: history,
+        activityDates
       })
       .where(eq(userStats.id, stats.id))
       .returning();
