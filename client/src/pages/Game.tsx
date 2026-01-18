@@ -12,7 +12,7 @@ import { getDistance } from "geolib";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Trophy, MapPin, AlertCircle, Camera, Settings, Timer, Target, Map as MapIcon, Leaf, Sparkles, Flame, Calendar } from "lucide-react";
 import { Link } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
