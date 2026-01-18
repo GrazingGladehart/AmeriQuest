@@ -41,6 +41,10 @@ export default function Settings() {
     queryKey: ["/api/questions"],
   });
 
+  const checkpointsQuery = useQuery<any[]>({
+    queryKey: ["/api/checkpoints/custom"],
+  });
+
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: { timeLimit: number; checkpointCount: number; rovingCount: number; radius: number }) => {
       return apiRequest("POST", "/api/settings", data);
@@ -211,6 +215,8 @@ export default function Settings() {
                 setCustomLng(lng);
               }}
               radius={radius}
+              existingCheckpoints={checkpointsQuery.data}
+              playerLocation={geoLat && geoLng ? { lat: geoLat, lng: geoLng } : undefined}
             />
           ) : (
             <div className="h-[300px] bg-muted flex items-center justify-center rounded-lg">

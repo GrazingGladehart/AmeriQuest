@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useState, useEffect } from 'react';
@@ -14,6 +14,24 @@ let DefaultIcon = L.icon({
     iconAnchor: [12, 41]
 });
 
+// Custom icon for existing checkpoints
+let CheckpointIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [20, 32],
+    iconAnchor: [10, 32],
+    className: 'hue-rotate-[240deg]' // Makes it look different (blue/purple)
+});
+
+// Custom icon for player location
+let PlayerIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    className: 'hue-rotate-[120deg]' // Makes it look green
+});
+
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapSelectorProps {
@@ -21,6 +39,8 @@ interface MapSelectorProps {
   lng: number;
   onLocationSelect: (lat: number, lng: number) => void;
   radius?: number;
+  existingCheckpoints?: { lat: number; lng: number; id: number }[];
+  playerLocation?: { lat: number; lng: number };
 }
 
 function LocationMarker({ lat, lng, onLocationSelect }: { lat: number; lng: number; onLocationSelect: (lat: number, lng: number) => void }) {
@@ -41,6 +61,7 @@ function LocationMarker({ lat, lng, onLocationSelect }: { lat: number; lng: numb
     <Marker 
       position={position} 
       draggable={true}
+      zIndexOffset={1000}
       eventHandlers={{
         dragend: (e) => {
           const marker = e.target;
@@ -53,7 +74,7 @@ function LocationMarker({ lat, lng, onLocationSelect }: { lat: number; lng: numb
   );
 }
 
-export function MapSelector({ lat, lng, onLocationSelect, radius }: MapSelectorProps) {
+export function MapSelector({ lat, lng, onLocationSelect, radius, existingCheckpoints, playerLocation }: MapSelectorProps) {
   return (
     <div className="h-[300px] w-full rounded-lg overflow-hidden border-2 border-muted relative z-0">
       <MapContainer 
@@ -66,6 +87,35 @@ export function MapSelector({ lat, lng, onLocationSelect, radius }: MapSelectorP
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        
+        {/* Radius circle around center/selection */}
+        {radius && (
+          <Circle 
+            center={[lat, lng]} 
+            radius={radius} 
+            pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }} 
+          />
+        )}
+
+        {/* Existing checkpoints */}
+        {existingCheckpoints?.map((cp) => (
+          <Marker 
+            key={`cp-${cp.id}`} 
+            position={[cp.lat, cp.lng]} 
+            icon={CheckpointIcon}
+            interactive={false}
+          />
+        ))}
+
+        {/* Player location */}
+        {playerLocation && (
+          <Marker 
+            position={[playerLocation.lat, playerLocation.lng]} 
+            icon={PlayerIcon}
+            zIndexOffset={500}
+          />
+        )}
+
         <LocationMarker lat={lat} lng={lng} onLocationSelect={onLocationSelect} />
       </MapContainer>
     </div>
