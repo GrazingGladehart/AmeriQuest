@@ -63,23 +63,29 @@ export class DatabaseStorage implements IStorage {
     return newCp;
   }
 
-  async getSettings(): Promise<{ timeLimit: number; checkpointCount: number; rovingCount: number; radius: number }> {
+  async getSettings(): Promise<{ timeLimit: number; checkpointCount: number; rovingCount: number; radius: number; mapTheme: string; zenMode: boolean }> {
     const [s] = await db.select().from(settings);
-    if (!s) return { timeLimit: 30, checkpointCount: 5, rovingCount: 2, radius: 500 };
+    if (!s) return { timeLimit: 30, checkpointCount: 5, rovingCount: 2, radius: 500, mapTheme: "standard", zenMode: false };
     return { 
       timeLimit: s.timeLimit,
       checkpointCount: s.checkpointCount,
       rovingCount: s.rovingCount,
-      radius: s.radius
+      radius: s.radius,
+      mapTheme: s.mapTheme ?? "standard",
+      zenMode: s.zenMode ?? false
     };
   }
 
-  async updateSettings(timeLimit: number, checkpointCount: number, rovingCount: number, radius: number): Promise<void> {
+  async updateSettings(timeLimit: number, checkpointCount: number, rovingCount: number, radius: number, mapTheme?: string, zenMode?: boolean): Promise<void> {
     const [s] = await db.select().from(settings);
+    const updateData = { timeLimit, checkpointCount, rovingCount, radius };
+    if (mapTheme !== undefined) (updateData as any).mapTheme = mapTheme;
+    if (zenMode !== undefined) (updateData as any).zenMode = zenMode;
+    
     if (s) {
-      await db.update(settings).set({ timeLimit, checkpointCount, rovingCount, radius }).where(eq(settings.id, s.id));
+      await db.update(settings).set(updateData).where(eq(settings.id, s.id));
     } else {
-      await db.insert(settings).values({ timeLimit, checkpointCount, rovingCount, radius });
+      await db.insert(settings).values({ ...updateData, mapTheme: mapTheme ?? "standard", zenMode: zenMode ?? false });
     }
   }
 

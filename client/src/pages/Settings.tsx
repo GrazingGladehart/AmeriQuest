@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Clock, MapPin, Plus, Loader2, Target, Move } from "lucide-react";
@@ -23,6 +24,8 @@ export default function Settings() {
   const [checkpointCount, setCheckpointCount] = useState(5);
   const [rovingCount, setRovingCount] = useState(2);
   const [radius, setRadius] = useState(500);
+  const [mapTheme, setMapTheme] = useState("standard");
+  const [zenMode, setZenMode] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
   const [customLat, setCustomLat] = useState<number | null>(null);
   const [customLng, setCustomLng] = useState<number | null>(null);
@@ -84,11 +87,13 @@ export default function Settings() {
       setCheckpointCount(settingsQuery.data.checkpointCount ?? 5);
       setRovingCount(settingsQuery.data.rovingCount ?? 2);
       setRadius(settingsQuery.data.radius ?? 500);
+      setMapTheme((settingsQuery.data as any).mapTheme ?? "standard");
+      setZenMode((settingsQuery.data as any).zenMode ?? false);
     }
   }, [settingsQuery.data]);
 
   const handleSaveSettings = () => {
-    updateSettingsMutation.mutate({ timeLimit, checkpointCount, rovingCount, radius });
+    updateSettingsMutation.mutate({ timeLimit, checkpointCount, rovingCount, radius, mapTheme, zenMode } as any);
   };
 
   const handleAddCheckpoint = () => {
@@ -192,6 +197,41 @@ export default function Settings() {
                 onValueChange={(val) => setRovingCount(val[0])}
                 data-testid="slider-roving-count"
               />
+            </div>
+
+            <div className="pt-4 border-t border-purple-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-bold flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-600" />
+                    Zen Mode
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Relaxed exploration without timers</p>
+                </div>
+                <Switch
+                  checked={zenMode}
+                  onCheckedChange={setZenMode}
+                  data-testid="switch-zen-mode"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <MapIcon className="w-4 h-4 text-blue-600" />
+                  Map Theme
+                </Label>
+                <Select value={mapTheme} onValueChange={setMapTheme}>
+                  <SelectTrigger data-testid="select-map-theme">
+                    <SelectValue placeholder="Select theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Forest Standard</SelectItem>
+                    <SelectItem value="satellite">Satellite View</SelectItem>
+                    <SelectItem value="terrain">Outdoor Terrain</SelectItem>
+                    <SelectItem value="dark">Midnight Explorer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

@@ -75,7 +75,20 @@ function LocationMarker({ lat, lng, onLocationSelect }: { lat: number; lng: numb
   );
 }
 
-export function MapSelector({ lat, lng, onLocationSelect, radius, existingCheckpoints, playerLocation, onCheckpointMove }: MapSelectorProps) {
+export function MapSelector({ lat, lng, onLocationSelect, radius, existingCheckpoints, playerLocation, onCheckpointMove, theme = "standard" }: MapSelectorProps & { theme?: string }) {
+  const getTileUrl = () => {
+    switch (theme) {
+      case 'satellite':
+        return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+      case 'terrain':
+        return "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+      case 'dark':
+        return "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+      default:
+        return "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    }
+  };
+
   return (
     <div className="h-[300px] w-full rounded-lg overflow-hidden border-2 border-muted relative z-0">
       <MapContainer 
@@ -85,8 +98,8 @@ export function MapSelector({ lat, lng, onLocationSelect, radius, existingCheckp
         style={{ height: "100%", width: "100%", zIndex: 0 }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; OpenStreetMap contributors'
+          url={getTileUrl()}
         />
         
         {/* Radius circle around center/selection */}

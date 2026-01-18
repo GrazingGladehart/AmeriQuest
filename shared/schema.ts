@@ -24,6 +24,8 @@ export const settings = pgTable("settings", {
   checkpointCount: integer("checkpoint_count").notNull().default(5),
   rovingCount: integer("roving_count").notNull().default(2),
   radius: integer("radius").notNull().default(500), // meters
+  mapTheme: text("map_theme").notNull().default("standard"),
+  zenMode: boolean("zen_mode").notNull().default(false),
 });
 
 export const userStats = pgTable("user_stats", {

@@ -96,8 +96,8 @@ export async function registerRoutes(
 
   app.post(api.game.updateSettings.path, async (req, res) => {
     try {
-      const { timeLimit, checkpointCount, rovingCount, radius } = req.body;
-      await storage.updateSettings(timeLimit, checkpointCount, rovingCount, radius);
+      const { timeLimit, checkpointCount, rovingCount, radius, mapTheme, zenMode } = req.body;
+      await storage.updateSettings(timeLimit, checkpointCount, rovingCount, radius, mapTheme, zenMode);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Invalid settings" });

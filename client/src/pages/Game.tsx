@@ -12,7 +12,12 @@ import { getDistance } from "geolib";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Trophy, MapPin, AlertCircle, Camera, Settings, Timer, Target, Map as MapIcon, Leaf, Sparkles, Flame, Calendar } from "lucide-react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Checkpoint } from "@shared/schema";
 import { NatureScavengerHunt } from "@/components/NatureScavengerHunt";
 import { LeafBackground } from "@/components/layout/LeafBackground";
@@ -28,8 +33,9 @@ export default function Game() {
   const [activeQuestion, setActiveQuestion] = useState<Checkpoint | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
 
-  const settingsQuery = useQuery<{ timeLimit: number; checkpointCount: number; radius: number }>({
+  const settingsQuery = useQuery<{ timeLimit: number; checkpointCount: number; radius: number; zenMode: boolean; mapTheme: string }>({
     queryKey: ["/api/settings"],
   });
 
@@ -67,6 +73,9 @@ export default function Game() {
     if (lat && lng) {
       const count = settingsQuery.data?.checkpointCount ?? 5;
       const radius = settingsQuery.data?.radius ?? 500;
+      const zen = settingsQuery.data?.zenMode ?? false;
+      setIsZenMode(zen);
+
       generateGameMutation.mutate(
         { lat, lng, radius, count },
         {
@@ -75,7 +84,11 @@ export default function Game() {
             setGameMode("ar");
             setScore(0);
             const minutes = settingsQuery.data?.timeLimit ?? 30;
-            setTimeRemaining(minutes * 60);
+            if (zen) {
+              setTimeRemaining(null);
+            } else {
+              setTimeRemaining(minutes * 60);
+            }
           }
         }
       );
@@ -92,7 +105,10 @@ export default function Game() {
     }
 
     const interval = setInterval(() => {
-      setTimeRemaining(prev => prev !== null ? prev - 1 : null);
+      setTimeRemaining(prev => {
+        if (prev === null) return null;
+        return prev > 0 ? prev - 1 : 0;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
