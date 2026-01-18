@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, useMapEvents, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Circle, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useState, useEffect } from 'react';
@@ -103,8 +103,12 @@ export function MapSelector({ lat, lng, onLocationSelect, radius, existingCheckp
             key={`cp-${cp.id}`} 
             position={[cp.lat, cp.lng]} 
             icon={CheckpointIcon}
-            interactive={false}
-          />
+          >
+            <Popup>
+              <div className="text-sm font-medium">Custom Checkpoint</div>
+              <div className="text-xs text-muted-foreground">ID: {cp.id}</div>
+            </Popup>
+          </Marker>
         ))}
 
         {/* Player location */}
