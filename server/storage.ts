@@ -1,5 +1,4 @@
 import { db } from "./db";
-import { db } from "./db";
 import { questions, type Question, type InsertQuestion, customCheckpoints, settings, type CustomCheckpoint, type InsertCustomCheckpoint, userStats, type UserStats, type InsertUserStats } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 
